@@ -1,0 +1,3 @@
+-- Criação das tabelas da Aurora Siger
+-- Responsável: Bruno (schema publicado em 23/10)
+-- Tabelas previstas: modulos, sensores, leituras, alertas

@@ -1,0 +1,29 @@
+# Ambientes Virtuais (Python)
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Banco local (SQLite gerado na execução)
+*.db
+*.sqlite3
+
+# Configurações de IDEs
+.vscode/
+.idea/
+*.swp
+
+# Arquivos de Sistema
+.DS_Store
+Thumbs.db
+
+# Pacote de entrega (gerado no fim, não versionar)
+*.zip
+
+# Segredos e Variáveis de Ambiente (CRÍTICO)
+.env
+.env.local
+*.pem
+*.key
