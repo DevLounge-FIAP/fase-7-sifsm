@@ -14,11 +14,10 @@ PASTA = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_BANCO = os.path.join(PASTA, "aurora_siger.db")
 CAMINHO_SCRIPT = os.path.join(PASTA, "script_banco.sql")
 
-# Colunas do contrato de dados, separadas por tipo
 INTEIROS = ["leitura_id", "modulo_id", "ocupacao", "prioridade"]
 DECIMAIS = ["temperatura_c", "geracao_solar_kw", "consumo_kw",
             "soc_bateria_pct", "consumo_previsto_kw"]
-LOGICOS = ["modulo_critico", "consumo_alto", "alerta"]  # verdadeiro/falso
+LOGICOS = ["modulo_critico", "consumo_alto", "alerta"]
 
 COLUNAS = ["modulo_id", "modulo_nome", "modulo_tipo", "modulo_critico", "sensor_id",
            "timestamp", "temperatura_c", "ocupacao", "geracao_solar_kw", "consumo_kw",
@@ -29,7 +28,6 @@ OBRIGATORIAS = ["modulo_id", "modulo_nome", "modulo_tipo", "modulo_critico",
 EDITAVEIS = ["timestamp", "temperatura_c", "ocupacao", "geracao_solar_kw", "consumo_kw",
              "consumo_alto", "status", "soc_bateria_pct", "consumo_previsto_kw"]
 
-# Colunas que podem ser usadas como filtro em listar_registros()
 FILTROS = {"leitura_id": "l.leitura_id", "modulo_id": "m.modulo_id",
            "sensor_id": "l.sensor_id", "alerta": "COALESCE(a.alerta, 0)"}
 
@@ -37,7 +35,7 @@ FILTROS = {"leitura_id": "l.leitura_id", "modulo_id": "m.modulo_id",
 def conectar():
     """Abre a conexão com o banco e cria as tabelas, se ainda não existirem."""
     conexao = sqlite3.connect(CAMINHO_BANCO)
-    conexao.row_factory = sqlite3.Row  # permite ler as colunas pelo nome
+    conexao.row_factory = sqlite3.Row 
     conexao.execute("PRAGMA foreign_keys = ON")
     with open(CAMINHO_SCRIPT, encoding="utf-8") as arquivo:
         conexao.executescript(arquivo.read())
@@ -70,7 +68,7 @@ def preparar(dados):
 
 def inserir_leitura(conexao, d):
     """Grava o módulo, o sensor, a leitura e (se houver) o alerta. Retorna o id da leitura."""
-    # Se o módulo ou o sensor já existirem, o OR IGNORE não faz nada
+
     conexao.execute("INSERT OR IGNORE INTO modulos VALUES (?, ?, ?, ?)",
                     (d["modulo_id"], d["modulo_nome"], d["modulo_tipo"], d["modulo_critico"]))
     conexao.execute("INSERT OR IGNORE INTO sensores VALUES (?, ?)",
@@ -144,7 +142,7 @@ def listar_registros(filtro=None):
         for linha in conexao.execute(consulta, valores):
             registro = dict(linha)
             for coluna in LOGICOS:
-                registro[coluna] = bool(registro[coluna])  # 0/1 vira False/True
+                registro[coluna] = bool(registro[coluna]) 
             registros.append(registro)
     except ValueError as erro:
         print(f"[ERRO] Filtro inválido: {erro}")
@@ -247,8 +245,6 @@ def carregar_csv(caminho):
         if conexao is not None:
             conexao.close()
 
-
-# Testes rápidos: python database.py (usa um banco temporário, não mexe no seu)
 if __name__ == "__main__":
     import tempfile
 
@@ -270,8 +266,8 @@ if __name__ == "__main__":
         excluir_registro(id_novo)
 
         print("\n--- Erros tratados ---")
-        cadastrar_registro({"modulo_id": "abc"})   # valor inválido
-        cadastrar_registro({"modulo_id": 1})       # campos obrigatórios faltando
-        alterar_registro(999, {"consumo_kw": 1})   # registro inexistente
-        excluir_registro(999)                      # registro inexistente
-        carregar_csv("arquivo_que_nao_existe.csv")  # arquivo inexistente
+        cadastrar_registro({"modulo_id": "abc"}) 
+        cadastrar_registro({"modulo_id": 1})       
+        alterar_registro(999, {"consumo_kw": 1})   
+        excluir_registro(999)                     
+        carregar_csv("arquivo_que_nao_existe.csv")  
