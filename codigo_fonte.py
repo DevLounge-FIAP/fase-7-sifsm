@@ -13,16 +13,6 @@ from structures import buscar_sensor, enfileirar_chamado, impacto_falha, proximo
 
 margem = " " * 4
 
-# ---------------------------------------------------------------------------
-# STUBS: funções dos outros membros que ainda não foram entregues.
-# Têm as mesmas assinaturas do contrato de interfaces.
-# Na integração (03 e 04/11), apague os stubs e troque pelos imports reais:
-#   from logic_rules import avaliar_alerta, tabela_verdade
-#   from simulacao_computacional import simular_soc
-#   from ml_model import treinar_modelo, avaliar_modelo, prever_consumo
-#   from agents import agente_triador
-# ---------------------------------------------------------------------------
-def tabela_verdade():  # Victor
     print(margem + "[STUB] logic_rules ainda não foi entregue.")
     return []
 
@@ -53,10 +43,6 @@ def prever_consumo(modelo, df):  # Michelly
 def agente_triador(solicitacao, sessao):  # Aelton
     return "[STUB] agents ainda não foi entregue."
 
-
-# ---------------------------------------------------------------------------
-# Perguntas do cadastro: (coluna, pergunta)
-# ---------------------------------------------------------------------------
 CAMPOS = [("modulo_id", "ID do módulo"),
           ("modulo_nome", "Nome do módulo"),
           ("modulo_tipo", "Tipo do módulo (ex.: energia)"),
@@ -70,10 +56,6 @@ CAMPOS = [("modulo_id", "ID do módulo"),
           ("consumo_alto", "Consumo alto? (S/N)"),
           ("status", "Status (ex.: ok)")]
 
-
-# ---------------------------------------------------------------------------
-# Opções do menu
-# ---------------------------------------------------------------------------
 def carregar_csv():
     print("----- CARREGAR CSV NO BANCO -----\n")
     arquivo = input(margem + "Nome do arquivo CSV (ex.: dados_amostra.csv): ").strip()
@@ -208,7 +190,6 @@ def agentes():
 def analisar_sustentabilidade():
     print("----- ANALISAR SUSTENTABILIDADE DA COLÔNIA -----\n")
 
-    # 1. Consulta o banco e identifica as leituras de consumo
     registros = database.listar_registros()
     if len(registros) == 0:
         print(margem + "Banco vazio. Carregue o CSV (opção 1).")
@@ -217,16 +198,13 @@ def analisar_sustentabilidade():
     media = sum(consumos) / len(consumos) if len(consumos) > 0 else 0
     print(margem + f"1. {len(registros)} leituras no banco. Consumo médio: {media:.2f} kW")
 
-    # 2. Regra booleana: as leituras em alerta
     alertas = [r for r in registros if r["alerta"]]
     print(margem + f"2. {len(alertas)} leitura(s) em alerta (regra booleana).")
 
-    # 3. Estrutura de dados: os alertas viram chamados na fila
     for alerta in alertas:
         enfileirar_chamado(alerta)
     print(margem + f"3. {len(alertas)} chamado(s) organizado(s) na fila por prioridade.")
-
-    # 4. Simulação e 5. regressão linear
+    
     df = pd.DataFrame(registros)
     print(margem + "4. Simulação do estado de carga:")
     simular_soc(df, "normal")
@@ -234,18 +212,14 @@ def analisar_sustentabilidade():
     modelo = treinar_modelo(df)
     print(margem + "   Métricas:", avaliar_modelo(modelo, df))
 
-    # 6. Recomendação técnica
+   
     print(margem + "6. Recomendação técnica:")
     if len(alertas) > 0:
         print(margem + "   - Atender primeiro os chamados de maior prioridade.")
     print(margem + "   - Reduzir o desperdício de energia nos módulos de maior consumo.")
     print(margem + "   - A decisão final deve ser validada por uma pessoa responsável.")
     print(margem + "Limitações: os dados são simulados e o modelo linear é simples.")
-
-
-# ---------------------------------------------------------------------------
-# Menu principal
-# ---------------------------------------------------------------------------
+    
 while True:
     os.system("cls" if os.name == "nt" else "clear")  # limpa a tela
     print("---- SIFSM - AURORA SIGER ----")
@@ -282,6 +256,6 @@ while True:
         case "11": analisar_sustentabilidade()
         case _: print(margem + "Digite um número entre 0 e 11.")
 
-    input("\n" + margem + "Pressione ENTER")  # pausa para ler as mensagens
+    input("\n" + margem + "Pressione ENTER") 
 
 print("Obrigado por utilizar o SIFSM!")
