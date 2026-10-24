@@ -13,12 +13,8 @@ import sqlite3
 from collections import deque
 
 import database
-
-# ---------------------------------------------------------------------------
-# 1. TABELA HASH (dict)
-# ---------------------------------------------------------------------------
-indice_sensores = {}  # código do sensor -> dados do sensor e do módulo
-indice_modulos = {}   # id do módulo -> dados do módulo
+indice_sensores = {} 
+indice_modulos = {}   
 
 
 def carregar_indices():
@@ -30,11 +26,11 @@ def carregar_indices():
         indice_sensores.clear()
         for linha in conexao.execute("SELECT * FROM modulos"):
             modulo = dict(linha)
-            modulo["modulo_critico"] = bool(modulo["modulo_critico"])  # 0/1 vira False/True
+            modulo["modulo_critico"] = bool(modulo["modulo_critico"])  
             indice_modulos[linha["modulo_id"]] = modulo
         for linha in conexao.execute("SELECT * FROM sensores"):
-            sensor = dict(indice_modulos[linha["modulo_id"]])  # dados do módulo...
-            sensor["sensor_id"] = linha["sensor_id"]           # ...mais o código do sensor
+            sensor = dict(indice_modulos[linha["modulo_id"]])  
+            sensor["sensor_id"] = linha["sensor_id"]           
             indice_sensores[linha["sensor_id"]] = sensor
     except sqlite3.Error as erro:
         print(f"[ERRO] Falha no banco de dados: {erro}")
@@ -46,7 +42,7 @@ def carregar_indices():
 def buscar_sensor(codigo):
     """Busca o sensor pelo código. Retorna um dicionário ou None se não existir."""
     if codigo not in indice_sensores:
-        carregar_indices()  # pode ser um sensor cadastrado há pouco
+        carregar_indices()  
     return indice_sensores.get(codigo)
 
 
@@ -60,10 +56,6 @@ def buscar_modulo(modulo_id):
         carregar_indices()
     return indice_modulos.get(modulo_id)
 
-
-# ---------------------------------------------------------------------------
-# 2. FILA FIFO DE CHAMADOS DE MANUTENÇÃO (deque)
-# ---------------------------------------------------------------------------
 fila_chamados = deque()
 
 
@@ -83,9 +75,6 @@ def enfileirar_chamado(alerta):
     except (KeyError, TypeError, ValueError):
         print("[ERRO] Alerta inválido: precisa ter 'leitura_id' e 'prioridade' numérica.")
         return None
-
-    # O novo chamado entra antes do primeiro chamado de prioridade MENOR.
-    # Se não houver nenhum, entra no fim da fila.
     posicao = len(fila_chamados)
     for i in range(len(fila_chamados)):
         if fila_chamados[i]["prioridade"] < prioridade:
@@ -101,12 +90,6 @@ def proximo_chamado():
         return None
     return fila_chamados.popleft()
 
-
-# ---------------------------------------------------------------------------
-# 3. GRAFO DE DEPENDÊNCIA + BUSCA EM LARGURA (BFS)
-# ---------------------------------------------------------------------------
-# Lista de adjacência: "energia": [...] = se a energia falha, esses módulos são afetados.
-# Os nomes devem ser iguais ao modulo_tipo do CSV.
 DEPENDENCIAS = {
     "energia": ["suporte_medico", "agricultura", "laboratorio", "comunicacao"],
     "suporte_medico": ["habitacao"],
@@ -124,7 +107,6 @@ def impacto_falha(modulo_id):
         print(f"[ERRO] Módulo {modulo_id} não encontrado.")
         return []
 
-    # BFS: visita primeiro os módulos que dependem diretamente, depois os seguintes
     origem = modulo["modulo_tipo"]
     visitados = [origem]
     fila = deque([origem])
@@ -135,7 +117,6 @@ def impacto_falha(modulo_id):
                 visitados.append(vizinho)
                 fila.append(vizinho)
 
-    # Troca os tipos visitados (menos a origem) pelos nomes dos módulos
     afetados = []
     for tipo in visitados[1:]:
         for outro in indice_modulos.values():
@@ -143,8 +124,6 @@ def impacto_falha(modulo_id):
                 afetados.append(outro["modulo_nome"])
     return afetados
 
-
-# Testes rápidos: python structures.py (usa um banco temporário, não mexe no seu)
 if __name__ == "__main__":
     import os
     import tempfile
@@ -152,7 +131,6 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as pasta_temp:
         database.CAMINHO_BANCO = os.path.join(pasta_temp, "teste.db")
 
-        # Cadastra 1 módulo de cada tipo (cada um com 1 sensor)
         tipos = ["energia", "suporte_medico", "habitacao", "agricultura",
                  "laboratorio", "comunicacao"]
         for numero, tipo in enumerate(tipos, start=1):
