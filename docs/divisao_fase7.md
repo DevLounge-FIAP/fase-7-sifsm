@@ -13,17 +13,17 @@ Cada critério da grade oficial da Fase 7 tem um único responsável, para que n
 | Organização dos dados, banco e CRUD | Uso coerente de dados da Aurora Siger, banco de dados ou arquivos, operações de cadastro, consulta, alteração e exclusão, tratamento de erros e organização das informações. | 1,5 | Bruno |
 | Circuitos lógicos e automação | Aplicação de lógica booleana, expressão lógica, regra de decisão, circuito lógico, sensores, atuadores, Arduino ou simulação no Tinkercad, quando utilizada. | 1,0 | Victor |
 | Estruturas de dados em sistemas complexos | Uso adequado e justificado de listas, filas, pilhas, *hash*, árvores, grafos ou outras estruturas estudadas, conectadas ao funcionamento do protótipo. | 1,0 | Bruno |
-| Simulação computacional e integração matemática | Construção ou apresentação de simulação coerente, uso de variáveis, gráficos, métodos computacionais ou conceitos de integração matemática relacionados ao problema. | 1,5 | Michelly |
-| Modelagem linear e tomada de decisão | Aplicação de regressão ou modelo linear simples, análise exploratória, interpretação dos coeficientes e avaliação dos resultados. | 1,0 | Michelly |
+| Simulação computacional e integração matemática | Construção ou apresentação de simulação coerente, uso de variáveis, gráficos, métodos computacionais ou conceitos de integração matemática relacionados ao problema. | 1,5 | Aelton |
+| Modelagem linear e tomada de decisão | Aplicação de regressão ou modelo linear simples, análise exploratória, interpretação dos coeficientes e avaliação dos resultados. | 1,0 | Aelton |
 | Integração de IA e sistemas multiagentes | Proposta coerente de agentes, ferramentas, *handoffs*, *guardrails*, sessões, RAG ou fluxos inteligentes, implementados, simulados ou descritos com clareza. | 1,0 | Aelton |
 | Arquitetura computacional e desempenho | Relação entre o protótipo e CPU, GPU, NPU, TPU, memória, movimentação de dados, paralelismo, aceleração ou computação heterogênea. | 1,0 | Victor |
 | Sustentabilidade, cidadania digital e impacto socioambiental | Análise conectada ao projeto sobre sustentabilidade, privacidade, impacto socioambiental, inovação responsável, diversidade e supervisão humana. | 1,0 | Aelton |
-| Clareza da entrega, código e apresentação | Pasta organizada, README claro, relatório estruturado, código comentado, evidências de execução e vídeo demonstrativo objetivo. | 1,0 | Aelton (com todos) |
+| Clareza da entrega, código e apresentação | Pasta organizada, README claro, relatório estruturado, código comentado, evidências de execução e vídeo demonstrativo objetivo. | 1,0 | Michelly (com todos) |
 | **Total** | | **10,0** | |
 
-**Pontuação por membro:** Bruno = 2,5 · Victor = 2,0 · Michelly = 2,5 · Aelton = 3,0.
+**Pontuação por membro:** Bruno = 2,5 · Victor = 2,0 · Michelly = 1,0 · Aelton = 4,5.
 
-O critério "Clareza da entrega" depende de todos: código comentado e mensagens claras no terminal são responsabilidade de cada autor no próprio módulo, e o Aelton responde pela pasta, README, relatório e vídeo.
+O critério "Clareza da entrega" depende de todos: código comentado e mensagens claras no terminal são responsabilidade de cada autor no próprio módulo, a Michelly responde pelo README e pelo relatório, o Bruno pelo vídeo e o Aelton pela pasta e pelo pacote final.
 
 ## Divisão de Responsabilidades por Membro
 
@@ -31,7 +31,7 @@ O critério "Clareza da entrega" depende de todos: código comentado e mensagens
 
 **Peso na rubrica:** 2,5 (Organização dos dados, banco e CRUD: 1,5 · Estruturas de dados em sistemas complexos: 1,0)
 
-**Escopo técnico:** Criar o `script_banco.sql` (tabelas `modulos`, `sensores`, `leituras` e `alertas`) e o módulo `database.py`: conexão Python com Oracle (ou SQLite, justificado no README), carga do `dados_aurora_siger.csv` no banco e operações CRUD completas (`cadastrar_registro()`, `listar_registros()`, `alterar_registro()`, `excluir_registro()`) com tratamento de erros via `try`, `except`, `else` e `finally` para entradas inválidas, registros inexistentes e falhas de conexão. Implementar no módulo `structures.py`: tabela hash (`dict`) para busca de sensores e módulos por código em $O(1)$; fila FIFO (`collections.deque`) de chamados de manutenção gerados pelos alertas, ordenada por prioridade na entrada; e grafo de dependência entre módulos (lista de adjacência, ex.: energia → suporte à vida → habitação) com busca em largura (BFS) para identificar os módulos afetados quando um módulo falha. Montar desde o início a interface principal (`codigo_fonte.py`, menu interativo CLI) chamando *stubs* com as assinaturas do contrato, para que o menu rode do primeiro ao último dia e cada módulo real substitua seu *stub* sem alterar o menu, e liderar a integração.
+**Escopo técnico:** Criar o `script_banco.sql` (tabelas `modulos`, `sensores`, `leituras` e `alertas`) e o módulo `database.py`: conexão Python com Oracle (ou SQLite, justificado no README), carga do `dados_aurora_siger.csv` no banco e operações CRUD completas (`cadastrar_registro()`, `listar_registros()`, `alterar_registro()`, `excluir_registro()`) com tratamento de erros via `try`, `except`, `else` e `finally` para entradas inválidas, registros inexistentes e falhas de conexão. Implementar no módulo `structures.py`: tabela hash (`dict`) para busca de sensores e módulos por código em $O(1)$; fila FIFO (`collections.deque`) de chamados de manutenção gerados pelos alertas, ordenada por prioridade na entrada; e grafo de dependência entre módulos (lista de adjacência, ex.: energia → suporte à vida → habitação) com busca em largura (BFS) para identificar os módulos afetados quando um módulo falha. Montar desde o início a interface principal (`codigo_fonte.py`, menu interativo CLI) chamando *stubs* com as assinaturas do contrato, para que o menu rode do primeiro ao último dia e cada módulo real substitua seu *stub* sem alterar o menu, e liderar a integração. Após a integração, roteirizar, gravar e editar o vídeo demonstrativo de 5 minutos com o menu integrado, publicá-lo no YouTube como não listado e preencher `link_video.txt`.
 
 **Agenda:**
 
@@ -42,8 +42,12 @@ O critério "Clareza da entrega" depende de todos: código comentado e mensagens
 | 27/10 a 30/10 | CRUD completo com tratamento de erros sobre a base completa |
 | 31/10 a 02/11 | `structures.py` (hash, fila e grafo com BFS) e nota técnica (seções 5.1 e 5.3) |
 | 03/11 a 04/11 | Lidera a integração: substitui os *stubs* pelos módulos reais e roda os testes de ponta a ponta |
+| 05/11 | Roteiro do vídeo, com o apoio dos demais para a demonstração de cada módulo |
+| 06/11 | Grava o vídeo completo |
+| 07/11 | Edita o vídeo |
+| 09/11 | Publica o vídeo e preenche `link_video.txt` |
 
-**Entregável:** `script_banco.sql`, `database.py`, `structures.py`, `codigo_fonte.py` integrado e nota técnica.
+**Entregável:** `script_banco.sql`, `database.py`, `structures.py`, `codigo_fonte.py` integrado, nota técnica, vídeo publicado e `link_video.txt`.
 
 
 
@@ -70,52 +74,51 @@ acompanhada da tabela verdade (8 combinações) e da função `classificar_prior
 
 
 
-### Membro 3 - Dados Simulados, Simulação Computacional e Regressão Linear (Michelly)
+### Membro 3 - Documentação (Michelly)
 
-**Peso na rubrica:** 2,5 (Simulação computacional e integração matemática: 1,5 · Modelagem linear e tomada de decisão: 1,0)
+**Peso na rubrica:** 1,0 (Clareza da entrega, código e apresentação: 1,0, com todos)
 
-**Escopo técnico:** Publicar a amostra oficial (`dados_amostra.csv`, cerca de 50 linhas com todas as colunas do contrato, inclusive as das etapas seguintes com valores provisórios) e, em seguida, a base completa da missão (`dados_aurora_siger.csv`) com leituras horárias simuladas dos módulos da colônia (habitação, agricultura, laboratório, suporte médico, comunicação e energia). Desenvolver o módulo `simulacao_computacional.py` (ou `.ipynb`) para simular o estado de carga (SoC) da bateria da colônia ao longo do tempo, usando integração numérica (regra do trapézio via NumPy/SciPy) sobre o balanço de potência:
-
-$$SoC(t) = SoC_0 + \frac{1}{C}\int_0^t \left(P_{solar}(\tau) - P_{consumo}(\tau)\right)d\tau$$
-
-Calcular a energia acumulada consumida por módulo (área sob a curva) e a média de consumo no período, comparando ao menos dois cenários (operação normal vs. tempestade de poeira com geração solar reduzida) e explicitando as limitações da simulação. Desenvolver o pipeline de regressão linear múltipla com Scikit-Learn no módulo `ml_model.py` para estimar o consumo dos módulos a partir de temperatura, ocupação e horário: análise exploratória com correlação, divisão formal entre treino e teste, interpretação dos coeficientes e cálculo obrigatório de MAE, RMSE e $R^2$. Gerar gráficos (curva de SoC por cenário, consumo acumulado, valores reais vs. previstos e resíduos) via Matplotlib exportados para a pasta `graficos_ou_imagens/`. Executar a inferência em todo o dataset e preencher as colunas reais `soc_bateria_pct` e `consumo_previsto_kw`.
+**Escopo:** Responsável pela base de dados simulada já publicada: a amostra oficial (`dados_amostra.csv`, com todas as colunas do contrato) e a base completa da missão (`dados_aurora_siger.csv`), gerada por `gerar_dados.py` com leituras horárias dos módulos da colônia (habitação, agricultura, laboratório, suporte médico, comunicação e energia). Escrever o `README.md` (pré-requisitos, instalação das dependências, configuração do `.env`, modo de execução do menu, justificativa do uso de SQLite e tabela de arquivos da entrega) e consolidar o `relatorio_tecnico.md/.pdf` a partir das notas técnicas de cada membro, padronizando a linguagem, as figuras e a seção de limitações e possíveis melhorias.
 
 **Agenda:**
 
 | Período | Tarefa |
 | --- | --- |
 | 22/10 a 23/10 | Publica o formato do CSV (colunas, unidades e período simulado) |
-| 24/10 (até 12h) | Publica `dados_amostra.csv` no repositório (**marco M0**) |
-| 24/10 a 26/10 | Gera `dados_aurora_siger.csv` completo |
-| 27/10 | Publica a base completa (**marco M1**) |
-| 27/10 a 29/10 | Simulação do SoC e comparação de cenários |
-| 30/10 a 01/11 | Regressão linear: exploração, treino/teste, coeficientes e métricas; publica o CSV enriquecido com `soc_bateria_pct` e `consumo_previsto_kw` reais (**marco M2**, 01/11) |
-| 02/11 | Gráficos finais exportados e nota técnica (seções 5.4 e 5.5) |
+| 24/10 a 26/10 | Publica `dados_amostra.csv` (**marco M0**) e `dados_aurora_siger.csv` completo (**marco M1**) |
+| 27/10 a 02/11 | Esqueleto do relatório técnico e primeira versão do README |
+| 03/11 a 04/11 | Atualiza o README com o fluxo do menu integrado |
+| 05/11 a 06/11 | Consolida o relatório com as notas técnicas |
+| 07/11 | Revisão final do relatório e do README; exporta o relatório em `.pdf` |
 
-**Entregável:** `dados_amostra.csv`, `dados_aurora_siger.csv`, `simulacao_computacional.py` (ou `.ipynb`), `ml_model.py`, gráficos em `graficos_ou_imagens/`, CSV enriquecido e nota técnica.
-
+**Entregável:** `dados_amostra.csv`, `dados_aurora_siger.csv`, `gerar_dados.py`, `README.md` e `relatorio_tecnico.md/.pdf`.
 
 
-### Membro 4 - IA, Sustentabilidade, Documentação e Entrega (Aelton)
 
-**Peso na rubrica:** 3,0 (Integração de IA e sistemas multiagentes: 1,0 · Sustentabilidade, cidadania digital e impacto socioambiental: 1,0 · Clareza da entrega, código e apresentação: 1,0)
+### Membro 4 - IA, Simulação, Modelagem Linear, Sustentabilidade e Entrega (Aelton)
 
-**Escopo técnico:** Criar o repositório com a estrutura de pastas da entrega e consolidar o contrato de dados e de interfaces. Implementar no módulo `agents.py` a simulação de um sistema multiagente: agente triador que interpreta a solicitação da tripulação e faz *handoff* para o agente de energia ou o agente de manutenção; ferramentas determinísticas que consultam o banco e as estruturas (`consultar_soc()`, `listar_alertas()`, `impacto_falha()`); *guardrails* que bloqueiam ações fora do escopo e o desligamento de módulos críticos sem aprovação humana; e histórico de sessão. Redigir o capítulo de Sustentabilidade, Cidadania Digital e Impacto Socioambiental (seção 5.8), conectado ao protótipo e cobrindo: simulação evitando desperdício, privacidade dos dados da tripulação, impacto ambiental de *data centers* e IA, inovação responsável avaliando benefícios e riscos, diversidade e inclusão na concepção dos agentes, e supervisão humana sobre as decisões dos agentes, já que a grade cobra explicitamente diversidade e supervisão humana. Consolidar o `relatorio_tecnico.md/.pdf` a partir das notas técnicas, escrever o `README.md` (dependências e modo de execução), roteirizar e editar o vídeo de 5 minutos, publicá-lo no YouTube como não listado, preencher `link_video.txt` e empacotar o `.zip` final.
+**Peso na rubrica:** 4,5 (Simulação computacional e integração matemática: 1,5 · Modelagem linear e tomada de decisão: 1,0 · Integração de IA e sistemas multiagentes: 1,0 · Sustentabilidade, cidadania digital e impacto socioambiental: 1,0)
+
+**Escopo técnico:** Criar o repositório com a estrutura de pastas da entrega e consolidar o contrato de dados e de interfaces. Desenvolver o módulo `simulacao_computacional.py` (ou `.ipynb`) para simular o estado de carga (SoC) da bateria da colônia ao longo do tempo, usando integração numérica (regra do trapézio via NumPy/SciPy) sobre o balanço de potência:
+
+$$SoC(t) = SoC_0 + \frac{1}{C}\int_0^t \left(P_{solar}(\tau) - P_{consumo}(\tau)\right)d\tau$$
+
+Calcular a energia acumulada consumida por módulo (área sob a curva) e a média de consumo no período, comparando ao menos dois cenários (operação normal vs. tempestade de poeira com geração solar reduzida) e explicitando as limitações da simulação. Desenvolver o pipeline de regressão linear múltipla com Scikit-Learn no módulo `ml_model.py` para estimar o consumo dos módulos a partir de temperatura, ocupação e horário: análise exploratória com correlação, divisão formal entre treino e teste, interpretação dos coeficientes e cálculo obrigatório de MAE, RMSE e $R^2$. Gerar gráficos (curva de SoC por cenário, consumo acumulado, valores reais vs. previstos e resíduos) via Matplotlib exportados para a pasta `graficos_ou_imagens/`. Executar a inferência em todo o dataset e preencher as colunas reais `soc_bateria_pct` e `consumo_previsto_kw`. Implementar no módulo `agents.py` a simulação de um sistema multiagente: agente triador que interpreta a solicitação da tripulação e faz *handoff* para o agente de energia ou o agente de manutenção; ferramentas determinísticas que consultam o banco e as estruturas (`consultar_soc()`, `listar_alertas()`, `impacto_falha()`); *guardrails* que bloqueiam ações fora do escopo e o desligamento de módulos críticos sem aprovação humana; e histórico de sessão. Redigir o capítulo de Sustentabilidade, Cidadania Digital e Impacto Socioambiental (seção 5.8), conectado ao protótipo e cobrindo: simulação evitando desperdício, privacidade dos dados da tripulação, impacto ambiental de *data centers* e IA, inovação responsável avaliando benefícios e riscos, diversidade e inclusão na concepção dos agentes, e supervisão humana sobre as decisões dos agentes, já que a grade cobra explicitamente diversidade e supervisão humana. Testar a execução pelo README, empacotar o `.zip` final e enviar a entrega.
 
 **Agenda:**
 
 | Período | Tarefa |
 | --- | --- |
 | 22/10 a 23/10 | Repositório com a estrutura de pastas da entrega; contrato de dados e de interfaces consolidado e congelado |
-| 24/10 a 29/10 | `agents.py`: triador, especialistas, ferramentas, *handoff*, *guardrails* e histórico, sobre os *stubs* do contrato |
-| 30/10 a 01/11 | Capítulo 5.8 |
-| 02/11 | Esqueleto do relatório e roteiro do vídeo (~1 min 15 s por membro) |
-| 03/11 a 04/11 | README e apoio à integração liderada pelo Bruno |
-| 05/11 a 06/11 | Consolida o relatório com as notas técnicas; grava seu trecho do vídeo |
-| 07/11 | Edita o vídeo |
-| 09/11 | Publica o vídeo, preenche `link_video.txt`, testa a execução pelo README e zipa o projeto |
+| 24/10 a 28/10 | `agents.py`: triador, especialistas, ferramentas, *handoff*, *guardrails* e histórico, sobre os *stubs* do contrato |
+| 29/10 a 30/10 | Simulação do SoC, energia acumulada por módulo e comparação de cenários |
+| 31/10 a 01/11 | Regressão linear: exploração, treino/teste, coeficientes e métricas; publica o CSV enriquecido com `soc_bateria_pct` e `consumo_previsto_kw` reais (**marco M2**, 01/11) |
+| 02/11 | Gráficos finais exportados e notas técnicas (seções 5.4, 5.5 e 5.6) |
+| 03/11 a 04/11 | Capítulo 5.8 e apoio à integração liderada pelo Bruno |
+| 09/11 | Testa a execução pelo README e zipa o projeto |
+| 10/11 | Envia a entrega |
 
-**Entregável final:** `agents.py`, capítulo 5.8 e o pacote `.zip` completo contendo o executável CLI unificado, o script do banco, a base de dados, a simulação, o circuito lógico, os gráficos, o relatório técnico, o README e o link do vídeo.
+**Entregável final:** `simulacao_computacional.py` (ou `.ipynb`), `ml_model.py`, gráficos em `graficos_ou_imagens/`, CSV enriquecido, `agents.py`, notas técnicas, capítulo 5.8 e o pacote `.zip` completo contendo o executável CLI unificado, o script do banco, a base de dados, a simulação, o circuito lógico, os gráficos, o relatório técnico, o README e o link do vídeo.
 
 
 
@@ -124,14 +127,14 @@ Calcular a energia acumulada consumida por módulo (área sob a curva) e a médi
 | Período | Bruno | Victor | Michelly | Aelton |
 | --- | --- | --- | --- | --- |
 | **22/10 a 23/10** | Schema do banco | Alinhamento | Formato do CSV | Repositório e contrato |
-| **24/10 a 26/10** | Banco, carga da amostra e menu sobre *stubs* | Regra booleana e tabela verdade; início do Tinkercad | Amostra (M0) e base completa | `agents.py` |
-| **27/10 a 31/10** | CRUD e erros; início das estruturas | Tinkercad; prioridade; rascunho 5.7 | Base (M1), simulação, regressão | `agents.py`; capítulo 5.8 |
-| **01/11 a 02/11** | Estruturas e nota técnica | Aplica regra ao CSV; 5.7 e nota técnica | CSV enriquecido (M2), gráficos e nota técnica | Capítulo 5.8; relatório e roteiro |
-| **03/11 a 04/11** | **Integração de ponta a ponta** | Correções da integração | Correções da integração | README; apoio à integração |
-| **05/11 a 06/11** | Grava trecho do vídeo | Grava trecho do vídeo | Grava trecho do vídeo | Consolida relatório; grava trecho |
-| **07/11** | Revisa o corte | Revisa o corte | Revisa o corte | Edita o vídeo |
+| **24/10 a 26/10** | Banco, carga da amostra e menu sobre *stubs* | Regra booleana e tabela verdade; início do Tinkercad | Amostra (M0) e base completa (M1) | `agents.py` |
+| **27/10 a 31/10** | CRUD e erros; início das estruturas | Tinkercad; prioridade; rascunho 5.7 | Esqueleto do relatório e README | `agents.py`; simulação; regressão |
+| **01/11 a 02/11** | Estruturas e nota técnica | Aplica regra ao CSV; 5.7 e nota técnica | Esqueleto do relatório e README | CSV enriquecido (M2), gráficos e notas técnicas |
+| **03/11 a 04/11** | **Integração de ponta a ponta** | Correções da integração | README com o menu integrado | Capítulo 5.8; correções da integração |
+| **05/11 a 06/11** | Roteiro e gravação do vídeo | Apoia o roteiro com a demonstração do seu módulo | Consolida relatório | Apoia o roteiro com a demonstração dos seus módulos |
+| **07/11** | Edita o vídeo | Revisa o corte | Revisão final do relatório e README | Revisa o corte |
 | **08/11** | Revisão cruzada | Revisão cruzada | Revisão cruzada | Revisão cruzada |
-| **09/11** | Reserva | Reserva | Reserva | Publica vídeo e zipa |
+| **09/11** | Publica o vídeo e preenche `link_video.txt` | Reserva | Reserva | Testa pelo README e zipa |
 | **10/11** | **Entrega oficial** | | | |
 
 ### Marcos de Controle
@@ -140,9 +143,11 @@ Calcular a energia acumulada consumida por módulo (área sob a curva) e a médi
 | --- | --- | --- | --- |
 | **M0** | 24/10 (até 12h) | Michelly | `dados_amostra.csv` no repositório com todas as colunas do contrato |
 | **M1** | 27/10 | Michelly e Victor | Base completa publicada; `avaliar_alerta()` testada |
-| **M2** | 01/11 | Michelly | CSV com `soc_bateria_pct` e `consumo_previsto_kw` reais publicado |
+| **M2** | 01/11 | Aelton | CSV com `soc_bateria_pct` e `consumo_previsto_kw` reais publicado |
 | **Congelamento** | 02/11 | Todos | Módulos entregues como funções importáveis + notas técnicas |
 | **Integração** | 04/11 | Bruno | Menu executando todas as opções com os módulos reais |
+| **Documentação** | 07/11 | Michelly | README e relatório técnico finalizados |
+| **Vídeo** | 09/11 | Bruno | Vídeo publicado como não listado e `link_video.txt` preenchido |
 | **Entrega** | 10/11 | Aelton | `.zip` enviado e link do vídeo funcionando |
 
 ### Revisão Cruzada (08/11)
@@ -158,7 +163,7 @@ Para garantir o desenvolvimento paralelo sem retrabalho entre os membros:
 O schema completo do `dados_aurora_siger.csv` é congelado em 23/10 e publicado já preenchido na amostra oficial de 24/10. As colunas das etapas seguintes existem desde a amostra com valores provisórios e são substituídas pelos valores reais conforme os marcos:
 
 - **Geradas pela Michelly (M0/M1):** `timestamp` (str ISO 8601), `modulo_id` (int), `modulo_nome` (str), `modulo_tipo` (str), `modulo_critico` (bool), `sensor_id` (str), `temperatura_c` (float), `ocupacao` (int), `geracao_solar_kw` (float), `consumo_kw` (float), `consumo_alto` (bool), `status` (str).
-- **Preenchidas pela Michelly (M2):** `soc_bateria_pct` (float), `consumo_previsto_kw` (float).
+- **Preenchidas pelo Aelton (M2):** `soc_bateria_pct` (float), `consumo_previsto_kw` (float).
 - **Preenchidas pelo Victor (congelamento):** `alerta` (bool, resultado da regra booleana) e `prioridade` (int de 1 a 5).
 
 Nenhuma coluna é renomeada ou removida depois de 23/10. Uma coluna nova só entra com acordo de todos e registro no README. O banco de dados espelha a base: o Bruno faz a carga, o menu final usa o banco para as operações CRUD e o CSV serve de contrato entre os módulos.
@@ -172,8 +177,8 @@ As assinaturas abaixo são congeladas em 23/10. O Bruno cria um *stub* para cada
 | `database.py` | `conectar()`, `cadastrar_registro(dados)`, `listar_registros(filtro=None)`, `alterar_registro(id, dados)`, `excluir_registro(id)` | Bruno |
 | `structures.py` | `buscar_sensor(codigo)`, `enfileirar_chamado(alerta)`, `proximo_chamado()`, `impacto_falha(modulo_id) -> list` | Bruno |
 | `logic_rules.py` | `avaliar_alerta(consumo_alto, modulo_critico, bateria_baixa) -> bool`, `tabela_verdade() -> list`, `classificar_prioridade(linha) -> int` | Victor |
-| `simulacao_computacional.py` | `simular_soc(df, cenario) -> DataFrame`, `energia_acumulada(df, modulo_id) -> float` | Michelly |
-| `ml_model.py` | `treinar_modelo(df) -> modelo`, `avaliar_modelo(modelo, df) -> dict`, `prever_consumo(modelo, df) -> DataFrame` | Michelly |
+| `simulacao_computacional.py` | `simular_soc(df, cenario) -> DataFrame`, `energia_acumulada(df, modulo_id) -> float` | Aelton |
+| `ml_model.py` | `treinar_modelo(df) -> modelo`, `avaliar_modelo(modelo, df) -> dict`, `prever_consumo(modelo, df) -> DataFrame` | Aelton |
 | `agents.py` | `agente_triador(solicitacao, sessao) -> str` | Aelton |
 
 ### Isolamento e Reutilização dos Módulos
@@ -183,7 +188,7 @@ Cada integrante desenvolve seu script com as funções do contrato acompanhadas 
 ### Plano de Contingência
 
 - Se um marco atrasar até 1 dia, os demais seguem sobre a amostra oficial sem impacto.
-- Se atrasar mais de 1 dia, o Aelton apoia o responsável na finalização do módulo atrasado, e o dia 09/11 é usado como reserva.
+- Se atrasar mais de 1 dia, o Victor apoia o responsável na finalização do módulo atrasado, e o dia 09/11 é usado como reserva.
 - Nenhum membro altera o código de outro: correções na integração são pedidas ao responsável, que as faz no próprio módulo.
 
 ### Empacotamento Centralizado
