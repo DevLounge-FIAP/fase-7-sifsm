@@ -2,7 +2,7 @@
 
 SoC(t) = SoC0 + (1/C) * integral de (P_solar - P_consumo) dt
 
-Responsável: Michelly
+Responsável: Aelton
 Critério: Simulação computacional e integração matemática (1,5)
 """
 

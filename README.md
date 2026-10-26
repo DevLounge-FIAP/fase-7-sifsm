@@ -47,11 +47,12 @@ Protótipo da missão Aurora Siger para gestão de energia e recursos dos módul
 | `database.py`, `script_banco.sql` | Banco e CRUD | Bruno |
 | `structures.py` | Hash, fila e grafo | Bruno |
 | `logic_rules.py`, `circuito_logico.png`, `link_tinkercad.txt` | Regra booleana e circuito | Victor |
-| `dados_aurora_siger.csv` | Base de dados simulada | Michelly |
-| `simulacao_computacional.py`, `ml_model.py` | Simulação e regressão | Michelly |
+| `dados_aurora_siger.csv`, `gerar_dados.py` | Base de dados simulada | Michelly |
+| `simulacao_computacional.py`, `ml_model.py` | Simulação e regressão | Aelton |
 | `agents.py` | Sistema multiagente | Aelton |
-| `relatorio_tecnico.md` | Relatório técnico | Aelton |
-| `link_video.txt` | Vídeo no YouTube (não listado) | Aelton |
+| `relatorio_tecnico.md` | Relatório técnico | Michelly |
+| `link_video.txt` | Vídeo no YouTube (não listado) | Bruno |
+| `README.md` | Documentação de execução | Michelly |
 | `graficos_ou_imagens/` | Gráficos e evidências | Todos |
 
 ## 🤝 Como Contribuir
