@@ -2,7 +2,7 @@
 
 SoC(t) = SoC0 + (1/C) * integral de (P_solar - P_consumo) dt
 
-Responsável: Aelton
+Responsável: Michelly
 Critério: Simulação computacional e integração matemática (1,5)
 """
 import pandas as pd
