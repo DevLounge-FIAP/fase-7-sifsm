@@ -4,9 +4,9 @@ Protótipo da missão Aurora Siger para gestão de energia e recursos dos módul
 
 ## 👥 Integrantes
 * Aelton Soares de Menezes - RM 573694
-* Bruno - RM XXXXX
-* Michelly - RM XXXXX
-* Victor - RM XXXXX
+* Bruno Santos Martins - RM 572073
+* Michelly Nunes dos Santos - RM 573625
+* Victor Gonçalves Mantovani - RM 570608
 
 ## 📋 Pré-requisitos
 * Python 3.11+
@@ -48,11 +48,11 @@ Protótipo da missão Aurora Siger para gestão de energia e recursos dos módul
 | `structures.py` | Hash, fila e grafo | Bruno |
 | `logic_rules.py`, `circuito_logico.png`, `link_tinkercad.txt` | Regra booleana e circuito | Victor |
 | `dados_aurora_siger.csv`, `gerar_dados.py` | Base de dados simulada | Michelly |
-| `simulacao_computacional.py`, `ml_model.py` | Simulação e regressão | Aelton |
+| `simulacao_computacional.py`, `ml_model.py` | Simulação e regressão | Michelly |
 | `agents.py` | Sistema multiagente | Aelton |
-| `relatorio_tecnico.md` | Relatório técnico | Michelly |
-| `link_video.txt` | Vídeo no YouTube (não listado) | Bruno |
-| `README.md` | Documentação de execução | Michelly |
+| `relatorio_tecnico.md` | Relatório técnico | Aelton |
+| `link_video.txt` | Vídeo no YouTube (não listado) | Aelton |
+| `README.md` | Documentação de execução | Aelton |
 | `graficos_ou_imagens/` | Gráficos e evidências | Todos |
 
 ## 🤝 Como Contribuir

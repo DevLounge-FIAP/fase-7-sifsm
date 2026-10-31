@@ -1,6 +1,6 @@
 """Regressão linear múltipla para prever o consumo dos módulos.
 
-Responsável: Aelton
+Responsável: Michelly
 Critério: Modelagem linear e tomada de decisão (1,0)
 """
 
