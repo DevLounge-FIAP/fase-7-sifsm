@@ -1,4 +1,4 @@
-"""Regressão linear múltipla para prever o consumo de energia dos módulos.
+"""Regressão linear múltipla para prever o consumo dos módulos.
 
 consumo_previsto = a + b1 * temperatura + b2 * ocupacao + b3 * turno + (consumo base do módulo)
 
@@ -152,6 +152,7 @@ def popular_base_dados(modelo, df):
 
 
 if __name__ == "__main__":
+    print("ml_model.py: testes rápidos aqui")
     dados = pd.read_csv("dados_aurora_siger.csv")
 
     print("\n=== Correlação com o consumo ===")
