@@ -6,6 +6,7 @@ Responsável: Victor
 Critério: Circuitos lógicos e automação (1,0)
 """
 
+import sys
 from itertools import product
 
 # Abaixo desse SoC (em %), a bateria é considerada baixa.
@@ -109,7 +110,67 @@ def classificar_prioridade(linha) -> int:
     return min(pontos, 5)
 
 
-if __name__ == "__main__":
+# ---------------------------------------------------------------------------
+# Aplicação da regra ao dataset (preenche as colunas alerta e prioridade)
+# ---------------------------------------------------------------------------
+def avaliar_alerta_linha(linha) -> bool:
+    """Aplica a regra booleana a uma linha do dataset (dicionário ou linha do pandas)."""
+    consumo_alto = _como_bool(_campo(linha, "consumo_alto"))
+    modulo_critico = _como_bool(_campo(linha, "modulo_critico"))
+    bateria_baixa = bateria_esta_baixa(_numero(_campo(linha, "soc_bateria_pct")))
+    return avaliar_alerta(consumo_alto, modulo_critico, bateria_baixa)
+
+
+def aplicar_regra_ao_df(df):
+    """Preenche as colunas alerta e prioridade de um DataFrame, linha a linha.
+
+    Retorna uma cópia; as outras colunas não são alteradas.
+    """
+    resultado = df.copy()
+    alertas = []
+    prioridades = []
+    for linha in resultado.to_dict("records"):
+        alertas.append(avaliar_alerta_linha(linha))
+        prioridades.append(classificar_prioridade(linha))
+    resultado["alerta"] = alertas
+    resultado["prioridade"] = prioridades
+    return resultado
+
+
+def aplicar_regra_ao_csv(caminho_entrada="dados_aurora_siger.csv", caminho_saida=None):
+    """Lê o CSV, aplica a regra e grava o resultado (por padrão, no próprio arquivo)."""
+    import pandas as pd  # importado aqui para o menu não depender do pandas só ao importar
+
+    df = pd.read_csv(caminho_entrada)
+    resultado = aplicar_regra_ao_df(df)
+    resultado.to_csv(caminho_saida or caminho_entrada, index=False, encoding="utf-8")
+    return resultado
+
+
+def resumo_alertas(df) -> str:
+    """Texto com o resumo dos alertas e prioridades de um DataFrame já processado."""
+    total = len(df)
+    em_alerta = df[df["alerta"]]
+    linhas = [f"Leituras: {total} | Em alerta: {len(em_alerta)} ({len(em_alerta) / total:.1%})"]
+    por_bateria = sum(1 for _, l in em_alerta.iterrows() if bateria_esta_baixa(_numero(l["soc_bateria_pct"])))
+    linhas.append(f"Alertas com bateria baixa: {por_bateria} | só por consumo alto em módulo crítico: {len(em_alerta) - por_bateria}")
+    linhas.append("Prioridade (1 a 5): " + ", ".join(
+        f"{p}={int((df['prioridade'] == p).sum())}" for p in range(1, 6)))
+    if len(em_alerta) > 0:
+        por_modulo = em_alerta.groupby("modulo_nome").size().sort_values(ascending=False)
+        linhas.append("Alertas por módulo: " + ", ".join(f"{n}={q}" for n, q in por_modulo.items()))
+    return "\n".join(linhas)
+
+
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "aplicar":
+    # Uso: python logic_rules.py aplicar [entrada.csv] [saida.csv]
+    entrada = sys.argv[2] if len(sys.argv) > 2 else "dados_aurora_siger.csv"
+    saida = sys.argv[3] if len(sys.argv) > 3 else None
+    final = aplicar_regra_ao_csv(entrada, saida)
+    print(f"[OK] Regra aplicada em {saida or entrada}")
+    print(resumo_alertas(final))
+
+elif __name__ == "__main__":
     print("--- Tabela verdade: ALERTA = (consumo_alto E modulo_critico) OU bateria_baixa ---")
     print(f"{'consumo_alto':<13}{'modulo_critico':<15}{'bateria_baixa':<14}ALERTA")
     for c, m, b, a in tabela_verdade():
@@ -170,5 +231,31 @@ if __name__ == "__main__":
         valor = classificar_prioridade(linha(alto, critico, soc, real, 10))
         assert isinstance(valor, int) and 1 <= valor <= 5
     print("[OK] Prioridade de 1 a 5")
+
+    print("\n--- Testes da aplicação ao dataset ---")
+    try:
+        import pandas as pd
+    except ImportError:
+        print("[AVISO] pandas não instalado; testes da aplicação ao dataset ignorados.")
+    else:
+        base = pd.DataFrame([
+            {"modulo_nome": "A", "modulo_critico": True, "consumo_alto": True, "soc_bateria_pct": 80.0,
+             "consumo_kw": 10.0, "consumo_previsto_kw": 10.0, "alerta": False, "prioridade": 1},
+            {"modulo_nome": "B", "modulo_critico": False, "consumo_alto": False, "soc_bateria_pct": 80.0,
+             "consumo_kw": 3.0, "consumo_previsto_kw": 3.0, "alerta": False, "prioridade": 1},
+            {"modulo_nome": "C", "modulo_critico": True, "consumo_alto": True, "soc_bateria_pct": 10.0,
+             "consumo_kw": 13.0, "consumo_previsto_kw": 10.0, "alerta": False, "prioridade": 1},
+            {"modulo_nome": "D", "modulo_critico": False, "consumo_alto": False, "soc_bateria_pct": 5.0,
+             "consumo_kw": 3.0, "consumo_previsto_kw": 3.0, "alerta": False, "prioridade": 1},
+        ])
+        feito = aplicar_regra_ao_df(base)
+        assert feito["alerta"].tolist() == [True, False, True, True]
+        assert feito["prioridade"].tolist() == [3, 1, 5, 3]
+        assert base["alerta"].tolist() == [False] * 4            # o original não é alterado
+        assert (feito.drop(columns=["alerta", "prioridade"]) == base.drop(columns=["alerta", "prioridade"])).all().all()
+        # Coerência: sem alerta é sempre 1; com alerta é sempre de 2 a 5
+        assert (feito.loc[~feito["alerta"], "prioridade"] == 1).all()
+        assert feito.loc[feito["alerta"], "prioridade"].between(2, 5).all()
+        print("[OK] Aplicação ao dataset")
 
     print("\n[OK] Todos os testes do logic_rules.py passaram.")
