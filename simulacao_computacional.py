@@ -120,13 +120,19 @@ def simular_soc(df, cenario="normal"):
     })
     return resultado
 
-def gerar_graficos(df, simulacao):
+def gerar_graficos(df, simulacao, normal=None):
+    """
+        Gera o gráfico da carga da bateria (tempestade e, se informado, o cenário normal para
+        comparar) e o gráfico do consumo acumulado por módulo
+    """
     dias = []
     for i in range(len(simulacao)):
         dias.append(i / 24)
 
     plt.figure(figsize=(10, 5))
-    plt.plot(dias, simulacao["soc_bateria_pct"], color="blue", label="Carga da bateria")
+    if normal is not None:
+        plt.plot(dias, normal["soc_bateria_pct"], color="green", alpha=0.6, label="Cenário normal")
+    plt.plot(dias, simulacao["soc_bateria_pct"], color="blue", label="Cenário tempestade")
     plt.axvspan(DIA_INICIO_TEMPESTADE, DIA_INICIO_TEMPESTADE + DIAS_TEMPESTADE, color="orange", alpha=0.2, label="Tempestade")
     plt.axvspan(DIA_INICIO_TEMPESTADE_EXTREMA, DIA_INICIO_TEMPESTADE_EXTREMA + DIAS_TEMPESTADE_EXTREMA, color="brown", alpha=0.2, label="Tempestade extrema")
     plt.axhline(BATERIA_BAIXA, color="red", linestyle="--", label="Bateria baixa")
@@ -207,6 +213,6 @@ if __name__ == "__main__":
         energia = energia_acumulada(dados, modulo_id)
         print(nome, ":", round(energia, 1), "kWh | Média:", round(energia / horas, 2), "kW")
 
-    gerar_graficos(dados, tempestade)
+    gerar_graficos(dados, tempestade, normal)
     print("\n✓ Gráficos salvos na pasta graficos_ou_imagens")
 

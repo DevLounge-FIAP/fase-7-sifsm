@@ -11,11 +11,17 @@ import pandas as pd
 import database
 from agents import agente_triador
 from logic_rules import avaliar_alerta, tabela_verdade
+from ml_model import COLUNAS as COLUNAS_MODELO
 from ml_model import avaliar_modelo, prever_consumo, treinar_modelo
-from simulacao_computacional import simular_soc
-from structures import buscar_sensor, enfileirar_chamado, impacto_falha, proximo_chamado
+from simulacao_computacional import BATERIA_BAIXA, energia_acumulada, simular_soc
+from structures import (buscar_sensor, enfileirar_chamado, fila_chamados, impacto_falha,
+                        listar_fila, proximo_chamado)
 
 margem = " " * 4
+
+# Mostra todas as colunas das tabelas do pandas, sem cortar com "..."
+pd.set_option("display.width", 200)
+pd.set_option("display.max_columns", 20)
 
 
 def tentar(funcao, *argumentos):
@@ -28,6 +34,30 @@ def tentar(funcao, *argumentos):
     except NotImplementedError:
         print(margem + f"[EM CONSTRUÇÃO] {funcao.__name__}() ainda não foi implementada.")
         return None
+
+
+def leituras_do_banco():
+    """Retorna as leituras do banco como DataFrame, ou None se o banco estiver vazio."""
+    registros = database.listar_registros()
+    if len(registros) == 0:
+        print(margem + "Banco vazio. Carregue o CSV primeiro (opção 1).")
+        return None
+    return pd.DataFrame(registros)
+
+
+def gerar_chamados(registros):
+    """Monta a fila de chamados a partir das leituras em alerta (refaz a fila do zero)."""
+    fila_chamados.clear()  # evita chamados repetidos se a opção for usada de novo
+    alertas = [r for r in registros if r["alerta"]]
+    for alerta in alertas:
+        enfileirar_chamado(alerta)
+    return alertas
+
+
+def resumo_cenario(df, cenario):
+    """Simula o cenário e retorna (SoC mínimo, horas abaixo do limite, horas a 0%, SoC final)."""
+    soc = simular_soc(df, cenario)["soc_bateria_pct"]
+    return soc.min(), int((soc < BATERIA_BAIXA).sum()), int((soc <= 0).sum()), soc.iloc[-1]
 
 
 # ---------------------------------------------------------------------------
@@ -52,8 +82,15 @@ CAMPOS = [("modulo_id", "ID do módulo"),
 # ---------------------------------------------------------------------------
 def carregar_csv():
     print("----- CARREGAR CSV NO BANCO -----\n")
-    arquivo = input(margem + "Nome do arquivo CSV (ex.: dados_aurora_siger.csv): ").strip()
-    database.carregar_csv(arquivo)
+    conexao = database.conectar()
+    total = conexao.execute("SELECT COUNT(*) FROM leituras").fetchone()[0]
+    conexao.close()
+    if total > 0:
+        # Carregar de novo duplicaria as leituras e dobraria o consumo de cada hora
+        print(margem + f"O banco já tem {total} leituras. Para recarregar, apague o arquivo aurora_siger.db.")
+        return
+    arquivo = input(margem + "Arquivo CSV (ENTER = dados_aurora_siger.csv): ").strip()
+    database.carregar_csv(arquivo or "dados_aurora_siger.csv")
 
 
 def cadastrar():
@@ -122,7 +159,7 @@ def regra_booleana():
 def estruturas():
     print("----- ESTRUTURAS DE DADOS -----\n")
     print(margem + "1 - Buscar sensor por código (tabela hash)")
-    print(margem + "2 - Gerar chamados de manutenção a partir dos alertas (fila)")
+    print(margem + "2 - Gerar a fila de chamados de manutenção a partir dos alertas")
     print(margem + "3 - Atender o próximo chamado (fila)")
     print(margem + "4 - Módulos afetados por uma falha (grafo + BFS)\n")
     escolha = input(margem + "Escolha -> ").strip()
@@ -137,16 +174,19 @@ def estruturas():
             else:
                 print(sensor)
         case "2":
-            alertas = database.listar_registros({"alerta": True})
-            for alerta in alertas:
-                enfileirar_chamado(alerta)
-            print(margem + f"{len(alertas)} chamado(s) colocado(s) na fila.")
+            alertas = gerar_chamados(database.listar_registros({"alerta": True}))
+            print(margem + f"{len(alertas)} chamado(s) na fila. Os 5 primeiros a serem atendidos:")
+            for chamado in listar_fila()[:5]:
+                print(margem + f"  P{chamado['prioridade']} | {chamado['modulo_nome']} | "
+                      f"{chamado['sensor_id']} | {chamado['timestamp']}")
         case "3":
             chamado = proximo_chamado()
             if chamado is None:
                 print(margem + "Fila vazia: nenhum chamado pendente.")
             else:
-                print(margem + "Atendendo o chamado:", chamado)
+                print(margem + f"Atendendo o chamado: P{chamado['prioridade']} | {chamado['modulo_nome']} | "
+                      f"{chamado['sensor_id']} | {chamado['timestamp']} (leitura {chamado['leitura_id']})")
+                print(margem + f"Restam {len(fila_chamados)} chamado(s) na fila.")
         case "4":
             modulo = input(margem + "ID do módulo que falhou: ").strip()
             afetados = impacto_falha(modulo)
@@ -160,26 +200,55 @@ def estruturas():
 
 def simulacao():
     print("----- SIMULAÇÃO DO ESTADO DE CARGA DA BATERIA -----\n")
-    print(margem + "1 - Operação normal")
-    print(margem + "2 - Tempestade de poeira\n")
-    escolha = input(margem + "Cenário -> ").strip()
-    cenario = "normal" if escolha == "1" else "tempestade"
-    df = pd.DataFrame(database.listar_registros())
-    resultado = tentar(simular_soc, df, cenario)
-    if resultado is not None:
-        print(resultado.head(10))
+    print(margem + "SoC(t) = SoC0 + (1/C) * integral de (P_solar - P_consumo) dt  (regra do trapézio)")
+    print(margem + "Bateria de 500 kWh, começando em 80%. Tempestade: sol a 70% nos dias 10 a 12")
+    print(margem + "e a 40% nos dias 15 e 16 (tempestade extrema).\n")
+    df = leituras_do_banco()
+    if df is None:
+        return
+
+    print(margem + f"{'Cenário':<12}{'SoC mínimo':>12}{'Horas < 20%':>14}{'Horas a 0%':>13}{'SoC final':>12}")
+    for cenario in ["normal", "tempestade"]:
+        minimo, abaixo, zerada, final = resumo_cenario(df, cenario)
+        print(margem + f"{cenario:<12}{minimo:>11.1f}%{abaixo:>14}{zerada:>13}{final:>11.1f}%")
+
+    print("\n" + margem + "Energia consumida por módulo nos 30 dias (área sob a curva):")
+    for modulo_id in sorted(df["modulo_id"].unique()):
+        nome = df[df["modulo_id"] == modulo_id]["modulo_nome"].iloc[0]
+        energia = energia_acumulada(df, modulo_id)
+        print(margem + f"  {nome:<15}{energia:>8.1f} kWh")
+    print("\n" + margem + "Gráficos: graficos_ou_imagens/soc_cenarios.png e consumo_acumulado.png")
 
 
 def regressao():
     print("----- REGRESSÃO LINEAR: PREVISÃO DE CONSUMO -----\n")
-    df = pd.DataFrame(database.listar_registros())
+    df = leituras_do_banco()
+    if df is None:
+        return
     modelo = tentar(treinar_modelo, df)
     if modelo is None:
         return
-    print(margem + "Métricas:", tentar(avaliar_modelo, modelo, df))
+
+    # Os módulos entram no modelo como colunas de sim/não (modulo_1 a modulo_6)
+    nomes = {f"modulo_{i}": f"módulo {n}" for i, n in
+             df.groupby("modulo_id")["modulo_nome"].first().items()}
+    print(margem + "Coeficientes (quanto o consumo muda, em kW):")
+    print(margem + f"  {'intercepto (a)':<26}{modelo.intercept_:>7.2f}")
+    for coluna, coeficiente in zip(COLUNAS_MODELO, modelo.coef_):
+        print(margem + f"  {nomes.get(coluna, coluna):<26}{coeficiente:>7.2f}")
+    ocupacao = modelo.coef_[COLUNAS_MODELO.index("ocupacao")]
+    print(margem + f"  -> cada tripulante a mais no módulo soma {ocupacao:.2f} kW ao consumo.")
+
+    metricas = tentar(avaliar_modelo, modelo, df)
+    print("\n" + margem + f"Métricas no teste (20% dos dados): MAE {metricas['MAE']} kW | "
+          f"RMSE {metricas['RMSE']} kW | R² {metricas['R2']}")
+
     previsoes = tentar(prever_consumo, modelo, df)
     if previsoes is not None:
-        print(previsoes.head(10))
+        print("\n" + margem + "Exemplo de previsões:")
+        print(previsoes[["timestamp", "modulo_nome", "ocupacao", "temperatura_c",
+                         "consumo_kw", "consumo_previsto_kw"]].head(6).to_string(index=False))
+    print("\n" + margem + "Gráficos: graficos_ou_imagens/real_vs_previsto.png e residuos.png")
 
 
 def agentes():
@@ -212,14 +281,16 @@ def analisar_sustentabilidade():
     print(margem + f"2. {len(alertas)} leitura(s) em alerta (regra booleana).")
 
     # 3. Estrutura de dados: os alertas viram chamados na fila
-    for alerta in alertas:
-        enfileirar_chamado(alerta)
+    gerar_chamados(registros)
     print(margem + f"3. {len(alertas)} chamado(s) organizado(s) na fila por prioridade.")
 
     # 4. Simulação e 5. regressão linear
     df = pd.DataFrame(registros)
     print(margem + "4. Simulação do estado de carga:")
-    tentar(simular_soc, df, "normal")
+    for cenario in ["normal", "tempestade"]:
+        minimo, abaixo, zerada, _ = resumo_cenario(df, cenario)
+        print(margem + f"   {cenario}: SoC mínimo {minimo:.1f}%, {abaixo} h abaixo de 20%, "
+              f"{zerada} h com a bateria zerada")
     print(margem + "5. Regressão linear:")
     modelo = tentar(treinar_modelo, df)
     if modelo is not None:
