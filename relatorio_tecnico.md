@@ -60,23 +60,132 @@ A geração solar segue uma curva diária (0 kW à noite e até 90 kW ao meio-di
 
 ### 5.1 Banco de dados e CRUD (Bruno)
 
-> *A consolidar a partir da nota técnica do Bruno (prevista para 02/11): modelo das tabelas `modulos`, `sensores`, `leituras` e `alertas`, carga do CSV, operações de cadastro, consulta, alteração e exclusão, tratamento de erros e justificativa do SQLite.*
+**Modelo das tabelas.** O `script_banco.sql` cria quatro tabelas normalizadas, ligadas por chaves estrangeiras (com `PRAGMA foreign_keys = ON`):
+
+| Tabela | Chave | Conteúdo |
+| --- | --- | --- |
+| `modulos` | `modulo_id` | Nome, tipo e se o módulo é crítico |
+| `sensores` | `sensor_id` | Código do sensor e o módulo em que está instalado |
+| `leituras` | `leitura_id` (autoincremento) | Leitura horária: temperatura, ocupação, geração solar, consumo, SoC e consumo previsto |
+| `alertas` | `alerta_id` | Leituras em alerta e a prioridade (1 a 5) |
+
+Separar módulos e sensores das leituras evita repetir o nome e o tipo do módulo em cada uma das 4.320 linhas, e a tabela `alertas` guarda só as 553 leituras que dispararam a regra. A consulta de listagem junta as quatro tabelas e devolve cada leitura com as mesmas colunas do CSV, o que mantém o contrato de dados entre os módulos.
+
+**Carga do CSV.** A opção 1 do menu lê o `dados_aurora_siger.csv` com `csv.DictReader`, converte cada campo para o tipo da coluna e grava módulo, sensor, leitura e alerta. O `commit` só acontece depois da última linha: se qualquer linha tiver erro, nada é gravado. O menu também impede uma segunda carga sobre o banco já preenchido, que duplicaria as leituras e dobraria o consumo de cada hora.
+
+**CRUD.** As funções do contrato são `cadastrar_registro()`, `listar_registros(filtro)` (filtros por leitura, módulo, sensor ou alerta), `alterar_registro()` (só nas colunas editáveis) e `excluir_registro()` (apaga o alerta antes da leitura, respeitando a chave estrangeira). As consultas usam parâmetros (`?`), nunca texto concatenado com a entrada do usuário, o que evita injeção de SQL.
+
+**Tratamento de erros.** Todas as operações seguem o padrão `try`, `except`, `else` e `finally`: `ValueError` para números inválidos ou campos obrigatórios em branco, `LookupError` para registros inexistentes, `FileNotFoundError` para o CSV ausente e `sqlite3.Error` para falhas do banco. O `else` mostra a confirmação e o `finally` sempre fecha a conexão. O teste do módulo (`python database.py`) roda em um banco temporário e provoca cada um desses erros.
+
+**Por que SQLite.** O enunciado aceita Oracle ou outro banco. O SQLite já vem com o Python e dispensa servidor, credenciais e VPN, então qualquer pessoa executa o projeto sem configuração. O schema usa SQL padrão e pode ser migrado para Oracle com poucos ajustes de tipos.
 
 ### 5.2 Regra lógica e circuito (Victor)
 
-> *A consolidar a partir da nota técnica do Victor (prevista para 02/11): expressão $ALERTA = (consumo\_alto \land modulo\_critico) \lor bateria\_baixa$, tabela verdade, `classificar_prioridade()` e circuito no Tinkercad com as evidências dos 5 testes.*
+**Expressão lógica.** Uma leitura gera alerta quando um módulo crítico está com consumo alto ou quando a bateria da colônia está baixa:
+
+$$ALERTA = (consumo\_alto \land modulo\_critico) \lor bateria\_baixa$$
+
+A bateria é considerada baixa abaixo de 20% de SoC (`LIMITE_BATERIA_BAIXA_PCT`), o mesmo limite usado na simulação e pelos agentes. A função `avaliar_alerta()` implementa a expressão, e `bateria_esta_baixa()` converte o SoC em verdadeiro ou falso.
+
+**Tabela verdade.** `tabela_verdade()` gera as 8 combinações com `itertools.product`; 5 delas disparam o alerta:
+
+| consumo_alto | modulo_critico | bateria_baixa | ALERTA |
+| :---: | :---: | :---: | :---: |
+| 0 | 0 | 0 | 0 |
+| 0 | 0 | 1 | 1 |
+| 0 | 1 | 0 | 0 |
+| 0 | 1 | 1 | 1 |
+| 1 | 0 | 0 | 0 |
+| 1 | 0 | 1 | 1 |
+| 1 | 1 | 0 | 1 |
+| 1 | 1 | 1 | 1 |
+
+**Prioridade.** `classificar_prioridade()` dá prioridade 1 às leituras sem alerta. Com alerta, parte de 2 e soma 1 ponto se o módulo é crítico, 1 se a bateria está abaixo de 20% e 1 se o consumo real está pelo menos 20% acima do previsto pela regressão (seção 5.5), com teto 5. Assim, a prioridade combina a regra lógica com a previsão do modelo linear.
+
+**Aplicação à base.** `python logic_rules.py aplicar` percorre o CSV linha a linha e preenche `alerta` e `prioridade`. Resultado: 553 das 4.320 leituras (12,8%) estão em alerta, 204 por bateria baixa e 349 por consumo alto em módulo crítico. As prioridades ficaram em 3 (392 leituras), 4 (157) e 5 (4). O módulo de Energia concentra 278 alertas, porque é crítico e tem muitas leituras de consumo alto.
+
+**Circuito no Tinkercad.** O `circuito_logico.ino` reproduz a mesma regra em um Arduino Uno: o potenciômetro (A0) faz o papel do consumo, alto acima de 700 na escala de 0 a 1023; o botão (pino 2, com `INPUT_PULLUP`) indica módulo crítico; o fotorresistor (A1) representa a carga da bateria, baixa abaixo de 205 (cerca de 20% da escala); e o LED no pino 13 é o atuador de alerta. A cada 200 ms o programa lê os sensores, aplica `(consumoAlto && moduloCritico) || bateriaBaixa`, acende ou apaga o LED e escreve as entradas e a saída no monitor serial. O circuito está em `circuito_logico.png` e o link em `link_tinkercad.txt`. Os cinco testes da seção 6 cobrem os casos principais da tabela verdade.
 
 ### 5.3 Estruturas de dados (Bruno)
 
-> *A consolidar a partir da nota técnica do Bruno (prevista para 02/11): tabela hash de sensores e módulos, fila de chamados por prioridade e grafo de dependência com busca em largura.*
+O módulo `structures.py` usa três estruturas, cada uma escolhida pelo tipo de pergunta que a operação da colônia precisa responder:
+
+**Tabela hash (`dict`).** `indice_sensores` e `indice_modulos` são preenchidos a partir do banco e permitem localizar um sensor ou módulo pelo código em tempo médio $O(1)$, sem percorrer as 4.320 leituras. `buscar_sensor("S-HAB-01")` devolve o sensor com os dados do módulo. Se o código não estiver no índice, o índice é recarregado uma vez, o que cobre sensores cadastrados depois do início do programa.
+
+**Fila de chamados (`collections.deque`).** Cada leitura em alerta vira um chamado de manutenção. `enfileirar_chamado()` insere o chamado antes do primeiro de prioridade menor, então a fila fica ordenada por prioridade na entrada e, dentro da mesma prioridade, quem chegou primeiro sai primeiro (FIFO). `proximo_chamado()` retira o primeiro com `popleft()` em $O(1)$. Com a base completa, a fila recebe 553 chamados e começa pelos 4 de prioridade 5, todos no módulo de Energia durante a tempestade.
+
+**Grafo de dependência com BFS.** A lista de adjacência `DEPENDENCIAS` registra quem depende de quem: a Energia alimenta Suporte Médico, Agricultura, Laboratório e Comunicação, e a Habitação depende do Suporte Médico e da Agricultura. `impacto_falha()` faz uma busca em largura a partir do módulo que falhou e devolve os afetados com o nível de distância. Uma falha na Energia atinge quatro módulos no nível 1 e a Habitação no nível 2. A busca em largura foi escolhida porque visita primeiro os efeitos diretos, que são os mais urgentes, e a lista de visitados impede repetir um módulo.
+
+Essas estruturas são reutilizadas pelos agentes (seção 5.6): o Agente de Manutenção lê a fila para listar os alertas e usa o grafo para explicar o efeito em cascata de uma falha.
 
 ### 5.4 Simulação computacional e integração matemática (Michelly)
 
-> *A consolidar a partir da nota técnica da Michelly (prevista para 02/11): modelo do SoC pela regra do trapézio, cenários normal e tempestade, energia acumulada por módulo, gráficos e limitações.*
+**Modelo.** O estado de carga (SoC) da bateria da colônia é a integral do balanço de potência ao longo do tempo:
+
+$$SoC(t) = SoC_0 + \frac{1}{C}\int_0^t \left(P_{solar}(\tau) - P_{consumo}(\tau)\right)d\tau$$
+
+com capacidade $C = 500$ kWh e $SoC_0 = 80\%$. A cada hora, $P_{solar}$ é a geração solar da leitura e $P_{consumo}$ é a soma do consumo dos seis módulos.
+
+**Método numérico.** Como as leituras são horárias, a integral é calculada pela regra do trapézio, com $\Delta t = 1$ h:
+
+$$E_i = \frac{(P_{solar} - P_{consumo})_{i-1} + (P_{solar} - P_{consumo})_i}{2} \cdot \Delta t \qquad SoC_i = SoC_{i-1} + \frac{E_i}{C} \cdot 100$$
+
+O SoC é limitado entre 0% e 100%, porque a bateria não carrega acima da capacidade nem descarrega abaixo de vazia. A mesma regra do trapézio calcula a energia acumulada de cada módulo (`energia_acumulada()`), que é a área sob a curva de consumo.
+
+**Cenários.** `simular_soc(df, cenario)` compara dois cenários sobre os mesmos 30 dias de leituras:
+
+- **normal:** geração solar das leituras;
+- **tempestade:** tempestade de poeira com o sol a 70% nos dias 10 a 12 e tempestade extrema com o sol a 40% nos dias 15 e 16.
+
+| Cenário | SoC mínimo | Horas abaixo de 20% | Horas com a bateria zerada | SoC final |
+| --- | ---: | ---: | ---: | ---: |
+| Normal | 51,4% | 0 | 0 | 79,6% |
+| Tempestade | 0,0% | 34 | 12 | 79,6% |
+
+No cenário normal, a bateria oscila entre cerca de 52% à noite e 100% ao meio-dia e nunca chega ao limite de alerta. Na tempestade, a carga já cai abaixo de 20% no fim do primeiro episódio e zera por 12 horas na tempestade extrema, ou seja, a colônia ficaria sem reserva para os módulos críticos. A bateria se recupera em cerca de dois dias de sol normal. O CSV usa o cenário de tempestade em `soc_bateria_pct`, com o mesmo valor nas 6 linhas de cada horário, para que a regra lógica tenha casos de bateria baixa.
+
+**Energia por módulo.** Nos 30 dias, a Habitação é o maior consumidor (2.976,6 kWh, média de 4,14 kW), seguida por Agricultura (2.615,4 kWh), Laboratório (2.549,9 kWh) e Suporte Médico (2.382,5 kWh). Energia (1.552,2 kWh) e Comunicação (1.525,3 kWh) consomem cerca da metade da Habitação.
+
+![Carga da bateria nos cenários normal e tempestade](graficos_ou_imagens/soc_cenarios.png)
+
+![Consumo acumulado por módulo](graficos_ou_imagens/consumo_acumulado.png)
+
+**Conclusão para a decisão.** A simulação mostra que a margem da bateria basta para a operação normal, mas não para uma tempestade de vários dias. Antes de uma tempestade prevista, a equipe deveria reduzir as cargas não críticas (Agricultura, Laboratório e Comunicação), que somam mais de 6.600 kWh no período.
 
 ### 5.5 Modelagem linear e tomada de decisão (Michelly)
 
-> *A consolidar a partir da nota técnica da Michelly (prevista para 02/11): análise exploratória, divisão treino/teste, coeficientes, MAE, RMSE, $R^2$ e gráficos de valores reais vs. previstos e resíduos.*
+**Análise exploratória.** A correlação com o consumo foi de 0,57 para a ocupação, 0,26 para o turno de trabalho (8h às 18h) e praticamente zero (0,00) para a temperatura. A temperatura sozinha não explica o consumo porque o efeito do aquecimento fica escondido pelas diferenças entre os módulos e pela ocupação. Dentro do modelo múltiplo, porém, ela aparece com efeito claro.
+
+**Modelo.** `treinar_modelo()` ajusta uma regressão linear múltipla com Scikit-Learn (`LinearRegression`):
+
+$$consumo\_previsto = a + b_1 \cdot temperatura + b_2 \cdot ocupacao + b_3 \cdot turno + \sum_{m=1}^{6} c_m \cdot modulo_m$$
+
+em que `turno` vale 1 no horário de trabalho e cada $modulo_m$ é uma variável de sim ou não que identifica o módulo da leitura. Os dados foram divididos em 80% para treino e 20% para teste (`train_test_split` com semente fixa), e as métricas são calculadas apenas no conjunto de teste.
+
+**Coeficientes.**
+
+| Variável | Coeficiente (kW) | Interpretação |
+| --- | ---: | --- |
+| Intercepto ($a$) | 6,22 | Ponto de partida da equação, que só faz sentido junto com as demais variáveis |
+| Temperatura | -0,19 | Cada 1 °C a menos aumenta o consumo em 0,19 kW (aquecimento) |
+| Ocupação | +0,31 | Cada tripulante a mais no módulo soma 0,31 kW |
+| Turno | +0,45 | No horário de trabalho o módulo consome 0,45 kW a mais |
+| Habitação | +0,82 | Módulo de maior carga base |
+| Agricultura | +0,59 | |
+| Laboratório | +0,31 | |
+| Suporte Médico | 0,00 | |
+| Comunicação | -0,86 | |
+| Energia | -0,87 | Módulo de menor carga base |
+
+Os coeficientes dos módulos só devem ser lidos uns em relação aos outros: nas mesmas condições de temperatura, ocupação e turno, a Habitação consome cerca de 1,7 kW a mais que o módulo de Energia ($0{,}82 - (-0{,}87)$).
+
+**Avaliação.** No conjunto de teste, o modelo obteve **MAE = 0,22 kW**, **RMSE = 0,28 kW** e **$R^2$ = 0,91**. Ou seja, o modelo explica 91% da variação do consumo, e o erro típico é de cerca de 0,2 kW para um consumo médio de 3,15 kW (7%). O RMSE próximo do MAE indica que não há erros muito grandes isolados. No gráfico de valores reais e previstos, os pontos ficam próximos da diagonal. Nos resíduos, os erros se espalham em torno de zero sem um padrão forte, o que é compatível com um modelo linear adequado.
+
+![Consumo real e previsto](graficos_ou_imagens/real_vs_previsto.png)
+
+![Resíduos da regressão](graficos_ou_imagens/residuos.png)
+
+**Uso na tomada de decisão.** A previsão vai para a coluna `consumo_previsto_kw` e é usada pela regra de prioridade (seção 5.2): uma leitura em alerta com consumo pelo menos 20% acima do previsto ganha 1 ponto de prioridade, porque indica um comportamento anormal do módulo, como um equipamento com defeito. Os coeficientes também orientam ações: como a ocupação pesa 0,31 kW por pessoa, concentrar a tripulação em menos módulos durante uma tempestade reduz o consumo.
 
 ### 5.6 Integração de IA e sistemas multiagentes (Aelton)
 
@@ -120,7 +229,19 @@ Mesmo uma ação aprovada é apenas registrada: o protótipo não aciona atuador
 
 ### 5.7 Arquitetura computacional e desempenho (Victor)
 
-> *A consolidar a partir do capítulo 5.7 do Victor (previsto para 02/11): CPU, GPU/NPU/TPU, paralelismo, hierarquia de memória, movimentação de dados e custo energético da computação na colônia.*
+Em uma colônia marciana, cada watt gasto em computação deixa de ir para o suporte à vida. Por isso, a escolha do hardware para cada parte do SIFSM segue o tipo de cálculo e o custo energético.
+
+**CPU para o CRUD, as regras e os agentes.** O banco, a regra booleana, as estruturas de dados e os agentes por regras fazem operações sequenciais, com muitos desvios condicionais e pouco cálculo numérico. Esse é o perfil em que a CPU é mais eficiente: poucos núcleos rápidos, com previsão de desvios e cache. Todo o protótipo roda em CPU comum, e a carga dos 4.320 registros leva poucos segundos.
+
+**Microcontrolador na borda.** A regra de alerta é simples a ponto de rodar em um Arduino (seção 5.2), que consome menos de 1 W. Em uma instalação real, cada módulo teria um microcontrolador que avalia o alerta localmente e acende o atuador mesmo se a rede ou o computador central falhar. Só os resultados sobem para o servidor, e não cada leitura bruta.
+
+**GPU, NPU e TPU para modelos maiores.** A regressão linear treina em milissegundos em CPU e não justifica um acelerador. Uma GPU, com milhares de núcleos simples executando a mesma operação sobre muitos dados (SIMD), faria diferença no treino de modelos maiores, como redes neurais para prever a geração solar a partir de imagens de poeira. NPUs e TPUs são especializadas em multiplicação de matrizes com baixa precisão e oferecem mais inferências por watt. Elas seriam a escolha para rodar localmente um modelo de linguagem pequeno nos agentes (seção 5.6), evitando depender da Terra, que está de 4 a 24 minutos de distância.
+
+**Paralelismo nas simulações.** Cada cenário de SoC é independente dos outros, então vários cenários (diferentes durações de tempestade, capacidades de bateria ou cortes de carga) poderiam ser simulados em paralelo, um por núcleo. Dentro de um mesmo cenário, porém, cada hora depende da anterior, e o laço é sequencial por natureza. Já o cálculo da energia acumulada dos seis módulos e as previsões da regressão sobre as 4.320 linhas são operações vetoriais, que o NumPy executa com instruções SIMD da própria CPU.
+
+**Memória e movimentação de dados.** A base inteira ocupa menos de 0,5 MB e cabe na memória RAM e até no cache dos processadores atuais. Por isso, o gargalo não é o cálculo, e sim a movimentação: ler o disco e trocar dados entre CPU e GPU custa mais tempo e energia do que as operações em si. O protótipo reduz essa movimentação carregando os índices hash uma vez e consultando o banco com filtros, em vez de ler as 4.320 leituras a cada pergunta.
+
+**Custo energético.** Na hierarquia de memória, buscar um dado na RAM gasta muito mais energia do que fazer uma operação aritmética, e transmitir pela rede gasta ainda mais. Para a colônia, isso leva a três escolhas: processar perto do sensor, usar o acelerador só quando o ganho compensa o consumo e preferir modelos pequenos e explicáveis, como a regressão e os agentes por regras. A seção 5.8 trata do mesmo tema do ponto de vista da sustentabilidade.
 
 ### 5.8 Sustentabilidade, cidadania digital e impacto socioambiental (Aelton)
 
@@ -194,7 +315,36 @@ O protótipo trata a tecnologia como apoio à comunidade da colônia, e não com
 
 ## 6. Resultados e evidências
 
-> *A consolidar em 05 a 07/11 com os resultados finais de cada módulo e as figuras de `graficos_ou_imagens/`: prints do circuito (5 testes), curva de SoC por cenário, consumo acumulado por módulo, gráficos da regressão e execução do menu integrado.*
+**Circuito lógico.** Os cinco testes no Tinkercad mostram o LED e o monitor serial para os casos principais da tabela verdade:
+
+| Teste | Entradas | LED (ALERTA) | Figura |
+| --- | --- | :---: | --- |
+| 1. Operação normal | consumo normal, módulo não crítico, bateria ok | apagado | `teste1_normal.png` |
+| 2. Consumo alto em módulo crítico | consumo alto, botão pressionado, bateria ok | aceso | `teste2_consumo_critico.png` |
+| 3. Só consumo alto | consumo alto, módulo não crítico, bateria ok | apagado | `teste3_so_consumo.png` |
+| 4. Só módulo crítico | consumo normal, botão pressionado, bateria ok | apagado | `teste4_so_critico.png` |
+| 5. Bateria baixa | pouca luz no fotorresistor | aceso | `teste5_bateria_baixa.png` |
+
+![Circuito lógico no Tinkercad](circuito_logico.png)
+
+![Teste 2: consumo alto em módulo crítico acende o LED](graficos_ou_imagens/teste2_consumo_critico.png)
+
+![Teste 5: bateria baixa acende o LED](graficos_ou_imagens/teste5_bateria_baixa.png)
+
+**Resultados da base completa.**
+
+| Módulo | Resultado |
+| --- | --- |
+| Banco e CRUD | 4.320 leituras carregadas em 4 tabelas; erros de entrada, registro inexistente e arquivo ausente tratados sem encerrar o programa |
+| Regra lógica | 553 leituras em alerta (12,8%); prioridades 3, 4 e 5 em 392, 157 e 4 leituras |
+| Estruturas | 553 chamados na fila, começando pelos de prioridade 5; falha na Energia afeta 5 módulos em 2 níveis |
+| Simulação | Normal: SoC mínimo de 51,4%. Tempestade: 34 h abaixo de 20% e 12 h com a bateria zerada |
+| Regressão | MAE 0,22 kW, RMSE 0,28 kW e $R^2$ 0,91 no teste |
+| Agentes | 15 turnos de teste aprovados: ferramentas, *handoffs*, guardrails, aprovação humana e histórico |
+
+**Testes automáticos.** Cada módulo tem um bloco `if __name__ == "__main__":` com testes próprios (`python database.py`, `logic_rules.py`, `structures.py`, `simulacao_computacional.py`, `ml_model.py` e `agents.py`), e todos passam. Os testes do banco, das estruturas e dos agentes usam um banco temporário, sem alterar o banco do usuário.
+
+**Menu integrado.** As 11 opções do `codigo_fonte.py` foram executadas em sequência sobre o banco carregado, sem erros. A opção 11 junta os módulos em uma análise só: lê o banco, conta os alertas, monta a fila, compara os dois cenários da simulação, avalia a regressão e termina com recomendações que dependem de validação humana. O vídeo demonstrativo (link em `link_video.txt`) mostra essa execução.
 
 ## 7. Limitações e possíveis melhorias
 
@@ -217,7 +367,11 @@ O protótipo trata a tecnologia como apoio à comunidade da colônia, e não com
 
 ## 8. Conclusão
 
-> *A consolidar em 05 a 07/11, após a integração.*
+O SIFSM integra em um único menu de terminal os conteúdos da Fase 7, todos aplicados ao mesmo problema: manter a energia da colônia Aurora Siger sob controle. O banco organiza as leituras, a regra booleana decide quando há alerta (também em um circuito físico simulado), as estruturas de dados ordenam os chamados e mostram o efeito em cascata das falhas, a simulação antecipa o que acontece com a bateria em uma tempestade, a regressão prevê o consumo esperado de cada módulo e os agentes respondem à tripulação com ferramentas e guardrails.
+
+O resultado mais importante é a resposta à pergunta da missão: a bateria é suficiente para a operação normal, com mínimo de 51%, mas não para uma tempestade de vários dias, que deixaria a colônia 12 horas sem reserva. O sistema sinaliza esse risco de três formas complementares: na simulação, nos alertas de prioridade alta e nas recomendações dos agentes, que propõem cortar primeiro as cargas não críticas.
+
+O trabalho em paralelo, apoiado em um contrato de dados e de interfaces definido no início, permitiu que cada integrante desenvolvesse e testasse o seu módulo de forma independente, e a integração consistiu apenas em trocar os *stubs* pelos módulos reais. As escolhas técnicas, como SQLite, modelos lineares, agentes por regras e processamento na borda, seguem o mesmo princípio da seção 5.8: usar a menor quantidade de energia e de complexidade que resolve o problema, e deixar as decisões críticas sempre com uma pessoa.
 
 ## Referências
 
