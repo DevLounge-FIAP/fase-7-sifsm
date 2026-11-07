@@ -42,7 +42,7 @@ O link do vídeo (YouTube, não listado) está em [`link_video.txt`](link_video.
    python codigo_fonte.py
    ```
 
-4. **Na primeira execução, escolha a opção 1** para carregar o `dados_aurora_siger.csv` no banco. O arquivo `aurora_siger.db` é criado automaticamente na pasta do projeto.
+4. **Na primeira execução, escolha a opção 1** e pressione ENTER para carregar o `dados_aurora_siger.csv` no banco. O arquivo `aurora_siger.db` é criado automaticamente na pasta do projeto. Para recarregar a base do zero, apague esse arquivo.
 
 ## 🧭 Opções do menu
 
@@ -52,8 +52,8 @@ O link do vídeo (YouTube, não listado) está em [`link_video.txt`](link_video.
 | 2 a 5 | Cadastra, lista, altera e exclui leituras (CRUD) | `database.py` |
 | 6 | Regra booleana do alerta e tabela verdade | `logic_rules.py` |
 | 7 | Estruturas de dados: busca por hash, fila de chamados e impacto de falha (grafo + BFS) | `structures.py` |
-| 8 | Simulação do estado de carga da bateria (cenário normal ou tempestade) | `simulacao_computacional.py` |
-| 9 | Regressão linear: previsão de consumo e métricas | `ml_model.py` |
+| 8 | Simulação do estado de carga da bateria: compara os cenários normal e tempestade e mostra a energia por módulo | `simulacao_computacional.py` |
+| 9 | Regressão linear: coeficientes, métricas (MAE, RMSE, R²) e exemplo de previsões | `ml_model.py` |
 | 10 | Agentes de IA: triador, energia e manutenção, com guardrails e aprovação humana | `agents.py` |
 | 11 | Análise de sustentabilidade da colônia, integrando os módulos | `codigo_fonte.py` |
 | 0 | Sai do sistema | |

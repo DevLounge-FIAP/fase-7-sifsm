@@ -126,7 +126,8 @@ def listar_registros(filtro=None):
             "m.modulo_critico, l.sensor_id, l.timestamp, l.temperatura_c, l.ocupacao, "
             "l.geracao_solar_kw, l.consumo_kw, l.consumo_alto, l.status, "
             "l.soc_bateria_pct, l.consumo_previsto_kw, "
-            "COALESCE(a.alerta, 0) AS alerta, a.prioridade "
+            "COALESCE(a.alerta, 0) AS alerta, COALESCE(a.prioridade, 1) AS prioridade "  # sem alerta = prioridade 1
+
             "FROM leituras l "
             "JOIN sensores s ON s.sensor_id = l.sensor_id "
             "JOIN modulos m ON m.modulo_id = s.modulo_id "

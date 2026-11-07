@@ -31,10 +31,10 @@ As falas são um guia; cada um pode adaptar com as próprias palavras, mantendo 
 
 ### Banco, CRUD e estruturas de dados (Bruno, 1 min 10 s)
 
-1. **Opção 1:** carrega as 4.320 leituras do CSV no banco SQLite. Explicar em uma frase por que usamos SQLite.
+1. **Opção 1** (ENTER aceita o arquivo padrão): carrega as 4.320 leituras do CSV no banco SQLite. Explicar em uma frase por que usamos SQLite. Para gravar de novo do zero, apague o `aurora_siger.db` antes.
 2. **Opções 2 e 3:** cadastra uma leitura e lista para mostrar que ela entrou.
 3. **Opção 5:** exclui um ID que não existe para mostrar o tratamento de erro, e depois exclui a leitura cadastrada.
-4. **Opção 7:** busca um sensor pelo código (hash), mostra a fila de chamados por prioridade e o impacto da falha do módulo de Energia (grafo com BFS).
+4. **Opção 7:** no submenu, `1` busca o sensor `S-HAB-01` (hash); `2` gera a fila e mostra os 5 primeiros chamados por prioridade; `3` atende o primeiro; `4` com o módulo `6` mostra o impacto da falha da Energia (grafo com BFS).
 
 ### Regra booleana e circuito (Victor, 1 min 10 s)
 
@@ -44,9 +44,9 @@ As falas são um guia; cada um pode adaptar com as próprias palavras, mantendo 
 
 ### Simulação e regressão linear (Michelly, 1 min 10 s)
 
-1. **Opção 8:** roda o cenário normal e o de tempestade e compara: no normal, a bateria não cai abaixo de 51%; na tempestade, passa 34 horas abaixo de 20%.
-2. Mostra o gráfico `soc_cenarios.png` e explica a regra do trapézio em uma frase.
-3. **Opção 9:** treina a regressão, mostra MAE, RMSE e R² e interpreta um coeficiente (por exemplo, quanto o consumo sobe por pessoa no módulo).
+1. **Opção 8:** mostra a tabela que compara os dois cenários: no normal, a bateria não cai abaixo de 51%; na tempestade, passa 34 horas abaixo de 20% e 12 horas zerada. Abaixo, a energia consumida por módulo.
+2. Mostra o gráfico `soc_cenarios.png` (as duas curvas sobrepostas) e explica a regra do trapézio em uma frase.
+3. **Opção 9:** mostra os coeficientes, MAE 0,22 kW, RMSE 0,28 kW e R² 0,91, e interpreta um coeficiente (cada tripulante a mais soma 0,31 kW; o menu já mostra essa frase).
 4. Mostra o gráfico de valores reais vs. previstos.
 
 ### Agentes de IA, sustentabilidade e encerramento (Aelton, 1 min 10 s)
